@@ -1,0 +1,16 @@
+{% extends "tasks/base.html" %}
+
+{% block title %}Esborrar tasca · ToDo{% endblock %}
+
+{% block content %}
+<h1>Esborrar tasca</h1>
+<p>Vols esborrar <strong>«{{ task.title }}»</strong>? Aquesta acció no es pot desfer.</p>
+
+<form method="post" class="task-form">
+  {% csrf_token %}
+  <div class="form-actions">
+    <button type="submit" class="btn danger">Sí, esborra-la</button>
+    <a class="btn secondary" href="{% url 'tasks:list' %}">Cancel·la</a>
+  </div>
+</form>
+{% endblock %}

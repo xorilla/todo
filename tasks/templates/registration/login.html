@@ -1,0 +1,21 @@
+{% extends "tasks/base.html" %}
+
+{% block title %}Inicia la sessió · ToDo{% endblock %}
+
+{% block content %}
+<div class="auth-card">
+  <h1>Inicia la sessió</h1>
+
+  {% if form.errors %}
+    <p class="form-error">Usuari o contrasenya incorrectes. Torna-ho a provar.</p>
+  {% endif %}
+
+  <form method="post">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit" class="btn">Entrar</button>
+  </form>
+
+  <p class="auth-switch">No tens compte? <a href="{% url 'register' %}">Registra't</a></p>
+</div>
+{% endblock %}

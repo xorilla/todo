@@ -1,0 +1,54 @@
+{% extends "tasks/base.html" %}
+
+{% block title %}Les meves tasques · ToDo{% endblock %}
+
+{% block content %}
+<div class="page-head">
+  <h1>Les meves tasques</h1>
+  <a class="btn" href="{% url 'tasks:create' %}">+ Nova tasca</a>
+</div>
+
+<ul class="filters">
+  <li><a class="{% if not current_filter %}active{% endif %}" href="{% url 'tasks:list' %}">Totes</a></li>
+  <li><a class="{% if current_filter == 'pendents' %}active{% endif %}" href="?filtre=pendents">Pendents</a></li>
+  <li><a class="{% if current_filter == 'fetes' %}active{% endif %}" href="?filtre=fetes">Completades</a></li>
+</ul>
+
+{% if tasks %}
+  <ul class="tasks">
+    {% for task in tasks %}
+      <li class="task {% if task.done %}done{% endif %}{% if task.is_overdue %} overdue{% endif %}">
+        <form method="post" action="{% url 'tasks:toggle' task.pk %}" class="inline-form">
+          {% csrf_token %}
+          <button type="submit" class="check" title="{% if task.done %}Marca com a pendent{% else %}Marca com a feta{% endif %}">
+            {{ task.done|yesno:"✓,∘" }}
+          </button>
+        </form>
+
+        <div class="task-main">
+          <span class="task-title">{{ task.title }}</span>
+          {% if task.notes %}<span class="task-notes">{{ task.notes }}</span>{% endif %}
+          {% if task.due_date %}
+            <span class="task-due {% if task.is_overdue %}overdue{% endif %}">
+              📅 {{ task.due_date }}{% if task.is_overdue %} · endarrerida{% endif %}
+            </span>
+          {% endif %}
+        </div>
+
+        <div class="task-actions">
+          <a class="btn small secondary" href="{% url 'tasks:edit' task.pk %}">Editar</a>
+          <a class="btn small danger" href="{% url 'tasks:delete' task.pk %}">Esborrar</a>
+        </div>
+      </li>
+    {% endfor %}
+  </ul>
+{% else %}
+  <p class="empty">
+    {% if current_filter == 'fetes' %}
+      Encara no has completat cap tasca.
+    {% else %}
+      No hi ha tasques. Fes-ne una de nova 🙂
+    {% endif %}
+  </p>
+{% endif %}
+{% endblock %}

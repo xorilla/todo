@@ -1,0 +1,335 @@
+/* ToDo — estil mínim */
+:root {
+  --bg: #f5f6f8;
+  --card: #ffffff;
+  --text: #1f2937;
+  --muted: #6b7280;
+  --primary: #2563eb;
+  --primary-dark: #1d4ed8;
+  --danger: #dc2626;
+  --border: #e5e7eb;
+  --radius: 10px;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.5;
+}
+
+/* Barra superior */
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.7rem 1.2rem;
+  background: var(--card);
+  border-bottom: 1px solid var(--border);
+}
+
+.brand {
+  font-weight: 700;
+  font-size: 1.15rem;
+  text-decoration: none;
+  color: var(--primary);
+}
+
+.topnav {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+}
+
+.who {
+  color: var(--muted);
+  font-size: 0.95rem;
+}
+
+/* Contenidor principal */
+.container {
+  max-width: 640px;
+  margin: 0 auto;
+  padding: 1.5rem 1rem 3rem;
+}
+
+h1 {
+  font-size: 1.4rem;
+  margin: 0.3rem 0 1rem;
+}
+
+/* Missatges de feedback */
+.messages {
+  max-width: 640px;
+  margin: 0.8rem auto 0;
+  padding: 0 1rem;
+}
+
+.message {
+  margin: 0.3rem 0;
+  padding: 0.55rem 0.9rem;
+  border-radius: var(--radius);
+  background: #ecfdf5;
+  color: #065f46;
+  border: 1px solid #a7f3d0;
+  font-size: 0.92rem;
+}
+
+.message.info,
+.message.warning {
+  background: #eff6ff;
+  color: #1e40af;
+  border-color: #bfdbfe;
+}
+
+.message.error {
+  background: #fef2f2;
+  color: #991b1b;
+  border-color: #fecaca;
+}
+
+/* Capçalera de pàgina */
+.page-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+/* Botons i enllaços d'acció */
+.btn {
+  display: inline-block;
+  padding: 0.5rem 1rem;
+  border: 1px solid var(--primary);
+  border-radius: var(--radius);
+  background: var(--primary);
+  color: #fff;
+  font-size: 0.95rem;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.btn:hover {
+  background: var(--primary-dark);
+}
+
+.btn.secondary {
+  background: transparent;
+  color: var(--primary);
+}
+
+.btn.danger {
+  border-color: var(--danger);
+  background: var(--danger);
+}
+
+.btn.danger:hover {
+  background: #b91c1c;
+}
+
+.btn.small {
+  padding: 0.3rem 0.6rem;
+  font-size: 0.85rem;
+}
+
+/* Filtres */
+.filters {
+  list-style: none;
+  display: flex;
+  gap: 0.4rem;
+  padding: 0;
+  margin: 1rem 0;
+}
+
+.filters a {
+  display: inline-block;
+  padding: 0.3rem 0.8rem;
+  border-radius: 999px;
+  text-decoration: none;
+  color: var(--muted);
+  border: 1px solid var(--border);
+  background: var(--card);
+  font-size: 0.9rem;
+}
+
+.filters a.active {
+  color: #fff;
+  background: var(--primary);
+  border-color: var(--primary);
+}
+
+/* Llista de tasques */
+.tasks {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.task {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.7rem;
+  padding: 0.8rem 1rem;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+
+.task .task-main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.task-title {
+  font-weight: 600;
+}
+
+.task-notes {
+  color: var(--muted);
+  font-size: 0.9rem;
+  white-space: pre-line;
+}
+
+.task-due {
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
+.task-due.overdue {
+  color: var(--danger);
+}
+
+.task-actions {
+  display: flex;
+  gap: 0.4rem;
+}
+
+.task.done .task-title {
+  text-decoration: line-through;
+  color: var(--muted);
+}
+
+.task.overdue {
+  border-left: 4px solid var(--danger);
+}
+
+/* Botó de marcar com a feta */
+.check {
+  width: 1.9rem;
+  height: 1.9rem;
+  border: 1.5px solid var(--muted);
+  border-radius: 50%;
+  background: #fff;
+  color: var(--primary);
+  font-size: 1rem;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.check:hover {
+  border-color: var(--primary);
+}
+
+.task.done .check {
+  background: var(--primary);
+  border-color: var(--primary);
+  color: #fff;
+}
+
+/* Formularis */
+form p {
+  margin: 0 0 0.9rem;
+}
+
+form label {
+  display: block;
+  font-size: 0.9rem;
+  margin-bottom: 0.25rem;
+  color: var(--muted);
+}
+
+form input[type="text"],
+form input[type="password"],
+form input[type="date"],
+form textarea {
+  width: 100%;
+  padding: 0.55rem 0.7rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  font: inherit;
+  background: #fff;
+}
+
+form input:focus,
+form textarea:focus {
+  outline: 2px solid var(--primary);
+  outline-offset: 1px;
+  border-color: var(--primary);
+}
+
+form p.errorlist {
+  color: var(--danger);
+  font-size: 0.85rem;
+}
+
+.form-actions {
+  display: flex;
+  gap: 0.6rem;
+}
+
+/* Pàgina d'authentificació */
+.auth-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1.6rem;
+  max-width: 380px;
+  margin: 2rem auto 0;
+}
+
+.auth-card h1 {
+  margin-top: 0;
+}
+
+.auth-switch {
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.form-error {
+  color: var(--danger);
+  font-size: 0.92rem;
+}
+
+.empty {
+  text-align: center;
+  color: var(--muted);
+  padding: 2rem 0;
+}
+
+/* Utilitats */
+.inline-form {
+  display: inline;
+}
+
+.linklike {
+  border: 0;
+  background: none;
+  padding: 0;
+  font: inherit;
+  color: var(--primary);
+  cursor: pointer;
+}
+
+.linklike:hover {
+  text-decoration: underline;
+}

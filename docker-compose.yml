@@ -1,0 +1,36 @@
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-todos}
+      POSTGRES_USER: ${POSTGRES_USER:-todos}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-todos}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-todos} -d ${POSTGRES_DB:-todos}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  web:
+    build: .
+    restart: unless-stopped
+    ports:
+      # Local: p. ex. WEB_PORT=8001 docker compose up (útil si el 8000 està ocupat).
+      # Dokploy: defineix el port 8000 a la pestanya Domain, això no afecta.
+      - "${WEB_PORT:-8000}:8000"
+    environment:
+      # En producció (Dokploy) defineix aquestes variables al panell:
+      SECRET_KEY: ${SECRET_KEY:-canvia-la-clau-secreta}
+      DEBUG: "0"
+      ALLOWED_HOSTS: ${ALLOWED_HOSTS:-localhost,127.0.0.1}
+      COOKIE_SECURE: ${COOKIE_SECURE:-0}
+      DATABASE_URL: postgres://${POSTGRES_USER:-todos}:${POSTGRES_PASSWORD:-todos}@db:5432/${POSTGRES_DB:-todos}
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  pgdata:

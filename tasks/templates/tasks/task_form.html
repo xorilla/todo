@@ -1,0 +1,16 @@
+{% extends "tasks/base.html" %}
+
+{% block title %}{% if editing %}Editar tasca{% else %}Nova tasca{% endif %} · ToDo{% endblock %}
+
+{% block content %}
+<h1>{% if editing %}Editar tasca{% else %}Nova tasca{% endif %}</h1>
+
+<form method="post" class="task-form">
+  {% csrf_token %}
+  {{ form.as_p }}
+  <div class="form-actions">
+    <button type="submit" class="btn">Guardar</button>
+    <a class="btn secondary" href="{% url 'tasks:list' %}">Cancel·la</a>
+  </div>
+</form>
+{% endblock %}
