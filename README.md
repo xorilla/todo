@@ -1,10 +1,11 @@
 # ToDo — gestió de tasques en Django
 
 Aplicació senzilla de tasques ("to-do") amb Django: registre i inici de sessió
-d'usuaris, cada usuari veu només les seves tasques, CRUD complet (crear,
-editar, marcar com a feta/pendent, esborrar), organització per **projectes**
-amb filtres combinables, vista de **pendents** per defecte, admin de Django i
-data límit opcional amb avís de tasca endarrerida.
+d'usuaris, cada usuari veu només les seves tasques, CRUD complet
+(crear, editar, esborrar), cicle d'estats **pendent → en procés → completada**,
+organització per **projectes** amb filtres combinables, vista de **pendents**
+per defecte, admin de Django i data límit opcional amb avís de tasca
+endarrerida.
 
 Stack: **Django 6.x · PostgreSQL 16 · Gunicorn · WhiteNoise · Docker Compose**,
 llest per desplegar a **Dokploy**.

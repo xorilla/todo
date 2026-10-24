@@ -10,6 +10,7 @@
 
 <ul class="filters">
   <li><a class="{% if current_filter == 'pendents' %}active{% endif %}" href="{% querystring filtre=None %}">Pendents</a></li>
+  <li><a class="{% if current_filter == 'proces' %}active{% endif %}" href="{% querystring filtre='proces' %}">En procés</a></li>
   <li><a class="{% if current_filter == 'fetes' %}active{% endif %}" href="{% querystring filtre='fetes' %}">Completades</a></li>
   <li><a class="{% if current_filter == 'totes' %}active{% endif %}" href="{% querystring filtre='totes' %}">Totes</a></li>
 </ul>
@@ -28,11 +29,11 @@
 {% if tasks %}
   <ul class="tasks">
     {% for task in tasks %}
-      <li class="task {% if task.done %}done{% endif %}{% if task.is_overdue %} overdue{% endif %}">
+      <li class="task {% if task.done %}done{% endif %}{% if task.in_progress %} in-progress{% endif %}{% if task.is_overdue %} overdue{% endif %}">
         <form method="post" action="{% url 'tasks:toggle' task.pk %}?{{ request.GET.urlencode }}" class="inline-form">
           {% csrf_token %}
-          <button type="submit" class="check" title="{% if task.done %}Marca com a pendent{% else %}Marca com a feta{% endif %}">
-            {{ task.done|yesno:"✓,∘" }}
+          <button type="submit" class="check" title="{% if task.done %}Marca com a pendent{% elif task.in_progress %}Marca com a finalitzada{% else %}Marca com a iniciada{% endif %}">
+            {% if task.done %}✓{% elif task.in_progress %}◐{% else %}∘{% endif %}
           </button>
         </form>
 
@@ -58,6 +59,8 @@
   <p class="empty">
     {% if current_filter == 'fetes' %}
       Encara no has completat cap tasca.
+    {% elif current_filter == 'proces' %}
+      No hi ha tasques en procés.
     {% elif current_project %}
       No hi ha tasques a «{{ current_project.name }}» amb aquest filtre.
     {% elif project_filter == 'cap' %}

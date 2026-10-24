@@ -114,14 +114,22 @@ class TaskTests(TestCase):
         self.task.refresh_from_db()
         self.assertIsNone(self.task.due_date)
 
-    def test_toggle_marks_done_and_undone(self):
+    def test_toggle_advances_through_states(self):
+        """El botó cicle pendent → en procés → completada → pendent."""
         self.client.post(reverse("tasks:toggle", args=[self.task.pk]))
         self.task.refresh_from_db()
-        self.assertTrue(self.task.done)
+        self.assertEqual(self.task.status, Task.Status.IN_PROGRESS)
 
         self.client.post(reverse("tasks:toggle", args=[self.task.pk]))
         self.task.refresh_from_db()
-        self.assertFalse(self.task.done)
+        self.assertEqual(self.task.status, Task.Status.DONE)
+
+        self.client.post(reverse("tasks:toggle", args=[self.task.pk]))
+        self.task.refresh_from_db()
+        self.assertEqual(self.task.status, Task.Status.PENDING)
+
+    def test_new_task_starts_pending(self):
+        self.assertEqual(self.task.status, Task.Status.PENDING)
 
     def test_delete_task_with_confirmation(self):
         # GET mostra la confirmació i no esborra res
@@ -144,7 +152,7 @@ class TaskTests(TestCase):
             self.assertEqual(response.status_code, 404)
 
     def test_filter_by_state(self):
-        Task.objects.create(user=self.user, title="Feta", done=True)
+        Task.objects.create(user=self.user, title="Feta", status=Task.Status.DONE)
         self.assertContains(
             self.client.get(reverse("tasks:list") + "?filtre=pendents"), "Comprar pa"
         )
@@ -152,15 +160,29 @@ class TaskTests(TestCase):
         self.assertContains(response, "Feta")
         self.assertNotContains(response, "Comprar pa")
 
+    def test_filter_en_proces(self):
+        Task.objects.create(
+            user=self.user, title="En curs", status=Task.Status.IN_PROGRESS
+        )
+        response = self.client.get(reverse("tasks:list") + "?filtre=proces")
+        self.assertContains(response, "En curs")
+        self.assertNotContains(response, "Comprar pa")
+
     def test_default_shows_pending_tasks(self):
-        """Sense paràmetre, la llista mostra només les pendents."""
-        Task.objects.create(user=self.user, title="Ja feta", done=True)
+        """Sense paràmetre, la llista mostra les pendents i les en procés."""
+        Task.objects.create(
+            user=self.user, title="Ja feta", status=Task.Status.DONE
+        )
+        Task.objects.create(
+            user=self.user, title="Trencada", status=Task.Status.IN_PROGRESS
+        )
         response = self.client.get(reverse("tasks:list"))
         self.assertContains(response, "Comprar pa")
+        self.assertContains(response, "Trencada")
         self.assertNotContains(response, "Ja feta")
 
     def test_filter_totes_shows_everything(self):
-        Task.objects.create(user=self.user, title="Ja feta", done=True)
+        Task.objects.create(user=self.user, title="Ja feta", status=Task.Status.DONE)
         response = self.client.get(reverse("tasks:list") + "?filtre=totes")
         self.assertContains(response, "Comprar pa")
         self.assertContains(response, "Ja feta")
@@ -263,7 +285,9 @@ class ProjectTests(TestCase):
     def test_project_list_shows_counts(self):
         project = Project.objects.create(user=self.user, name="Casa")
         Task.objects.create(user=self.user, project=project, title="Fotos noves")
-        Task.objects.create(user=self.user, project=project, title="Parets", done=True)
+        Task.objects.create(
+            user=self.user, project=project, title="Parets", status=Task.Status.DONE
+        )
         Project.objects.create(user=self.other, name="Aliena")
         response = self.client.get(reverse("tasks:project_list"))
         self.assertContains(response, "Casa")
@@ -282,7 +306,7 @@ class TaskProjectFilterTests(TestCase):
             user=self.user, project=self.project, title="Fer informe"
         )
         self.free_task = Task.objects.create(user=self.user, title="Penjar el quadre")
-        Task.objects.create(user=self.user, title="Ja feta", done=True)
+        Task.objects.create(user=self.user, title="Ja feta", status=Task.Status.DONE)
 
     def test_filter_by_project(self):
         response = self.client.get(reverse("tasks:list") + f"?projecte={self.project.pk}")

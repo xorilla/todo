@@ -37,6 +37,11 @@ class Project(models.Model):
 class Task(models.Model):
     """Una tasca per fer, sempre lligada a l'usuari que l'ha creada."""
 
+    class Status(models.TextChoices):
+        PENDING = "pending", "pendent"
+        IN_PROGRESS = "in_progress", "en procés"
+        DONE = "done", "completada"
+
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
@@ -53,13 +58,28 @@ class Task(models.Model):
     )
     title = models.CharField("títol", max_length=200)
     notes = models.TextField("notes", blank=True)
-    done = models.BooleanField("completada", default=False)
+    status = models.CharField(
+        "estat",
+        max_length=20,
+        choices=Status.choices,
+        default=Status.PENDING,
+    )
     created_at = models.DateTimeField("creada el", auto_now_add=True)
     updated_at = models.DateTimeField("actualitzada el", auto_now=True)
     due_date = models.DateField("data límit", blank=True, null=True)
 
     class Meta:
-        ordering = ["done", "due_date", "-created_at"]
+        # Primer les pendents, després les en procés, i al final les completades
+        ordering = [
+            models.Case(
+                models.When(status="pending", then=models.Value(0)),
+                models.When(status="in_progress", then=models.Value(1)),
+                default=models.Value(2),
+                output_field=models.IntegerField(),
+            ),
+            "due_date",
+            "-created_at",
+        ]
         verbose_name = "tasca"
         verbose_name_plural = "tasques"
 
@@ -70,8 +90,29 @@ class Task(models.Model):
         return reverse("tasks:list")
 
     @property
+    def done(self) -> bool:
+        """Legacy: la tasca està finalitzada (abans un camp booleà)."""
+        return self.status == self.Status.DONE
+
+    @property
+    def in_progress(self) -> bool:
+        return self.status == self.Status.IN_PROGRESS
+
+    def advance_state(self) -> Task.Status:
+        """Segueix el cicle pendent → en procés → completada → pendent."""
+        next_status = {
+            self.Status.PENDING: self.Status.IN_PROGRESS,
+            self.Status.IN_PROGRESS: self.Status.DONE,
+            self.Status.DONE: self.Status.PENDING,
+        }.get(self.status, self.Status.PENDING)
+        self.status = next_status
+        return next_status
+
+    @property
     def is_overdue(self) -> bool:
         """La data límit ha passat i la tasca encara no està feta."""
         return bool(
-            self.due_date and not self.done and self.due_date < timezone.localdate()
+            self.due_date
+            and self.status != self.Status.DONE
+            and self.due_date < timezone.localdate()
         )

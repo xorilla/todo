@@ -41,15 +41,17 @@ def _list_url(request) -> str:
 def task_list(request):
     tasks = Task.objects.filter(user=request.user)
 
-    # Sense paràmetre es mostren les pendents ("totes" per veure-les totes).
+    # Sense paràmetre es mostren les no completades ("totes" per veure-les totes).
     filt = request.GET.get("filtre", "")
     if filt == "totes":
         filt = "totes"
+    elif filt == "proces":
+        tasks = tasks.filter(status=Task.Status.IN_PROGRESS)
     elif filt == "fetes":
-        tasks = tasks.filter(done=True)
+        tasks = tasks.filter(status=Task.Status.DONE)
     else:
         filt = "pendents"
-        tasks = tasks.filter(done=False)
+        tasks = tasks.exclude(status=Task.Status.DONE)
 
     # Filtre per projecte: "tots" (per defecte), "cap" o el pk d'un projecte.
     project_filter = request.GET.get("projecte", "tots")
@@ -136,11 +138,13 @@ def task_edit(request, pk):
 @login_required
 @require_POST
 def task_toggle(request, pk):
-    """Marca la tasca com a feta o com a pendent (només POST)."""
+    """Avança la tasca al següent estat: pendent → en procés → completada."""
     task = _get_own_task(request, pk)
-    task.done = not task.done
-    task.save(update_fields=["done", "updated_at"])
-    if task.done:
+    new_status = task.advance_state()
+    task.save(update_fields=["status", "updated_at"])
+    if new_status == Task.Status.IN_PROGRESS:
+        messages.info(request, "Tasca iniciada. Endavant!")
+    elif new_status == Task.Status.DONE:
         messages.success(request, "Tasca completada. Bona feina!")
     else:
         messages.info(request, "Tasca tornada a posar com a pendent.")
@@ -170,7 +174,9 @@ def project_list(request):
         Project.objects.filter(user=request.user)
         .annotate(
             num_tasks=Count("tasks"),
-            num_pending=Count("tasks", filter=Q(tasks__done=False)),
+            num_pending=Count(
+                "tasks", filter=Q(tasks__status=Task.Status.PENDING)
+            ),
         )
     )
 

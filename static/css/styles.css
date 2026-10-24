@@ -273,6 +273,14 @@ h1 {
   border-left: 4px solid var(--danger);
 }
 
+.task.in-progress .task-title::after {
+  content: "· en procés";
+  font-weight: 400;
+  font-size: 0.85rem;
+  color: var(--primary);
+  white-space: nowrap;
+}
+
 /* Botó de marcar com a feta */
 .check {
   width: 1.9rem;
@@ -294,6 +302,10 @@ h1 {
   background: var(--primary);
   border-color: var(--primary);
   color: #fff;
+}
+
+.task.in-progress .check {
+  border-color: var(--primary);
 }
 
 /* Formularis */
