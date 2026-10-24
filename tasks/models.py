@@ -98,7 +98,7 @@ class Task(models.Model):
     def in_progress(self) -> bool:
         return self.status == self.Status.IN_PROGRESS
 
-    def advance_state(self) -> Task.Status:
+    def advance_state(self) -> "Task.Status":
         """Segueix el cicle pendent → en procés → completada → pendent."""
         next_status = {
             self.Status.PENDING: self.Status.IN_PROGRESS,
