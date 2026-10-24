@@ -1,0 +1,30 @@
+{% extends "tasks/base.html" %}
+
+{% block title %}Projectes · ToDo{% endblock %}
+
+{% block content %}
+<div class="page-head">
+  <h1>Projectes</h1>
+  <a class="btn" href="{% url 'tasks:project_create' %}">+ Nou projecte</a>
+</div>
+
+{% if projects %}
+  <ul class="tasks">
+    {% for project in projects %}
+      <li class="task">
+        <div class="task-main">
+          <a class="project-name" href="{% url 'tasks:list' %}?projecte={{ project.pk }}">{{ project.name }}</a>
+          <span class="task-notes">{{ project.num_pending }} pendents · {{ project.num_tasks }} en total</span>
+        </div>
+
+        <div class="task-actions">
+          <a class="btn small secondary" href="{% url 'tasks:project_edit' project.pk %}">Editar</a>
+          <a class="btn small danger" href="{% url 'tasks:project_delete' project.pk %}">Esborrar</a>
+        </div>
+      </li>
+    {% endfor %}
+  </ul>
+{% else %}
+  <p class="empty">No tens cap projecte. Crea'n un per agrupar les tasques 🙂</p>
+{% endif %}
+{% endblock %}

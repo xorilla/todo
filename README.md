@@ -2,8 +2,9 @@
 
 Aplicació senzilla de tasques ("to-do") amb Django: registre i inici de sessió
 d'usuaris, cada usuari veu només les seves tasques, CRUD complet (crear,
-editar, marcar com a feta/pendent, esborrar), filtres d'estat, admin de
-Django i data límit opcional amb avís de tasca endarrerida.
+editar, marcar com a feta/pendent, esborrar), organització per **projectes**
+amb filtres combinables, vista de **pendents** per defecte, admin de Django i
+data límit opcional amb avís de tasca endarrerida.
 
 Stack: **Django 6.x · PostgreSQL 16 · Gunicorn · WhiteNoise · Docker Compose**,
 llest per desplegar a **Dokploy**.
@@ -115,5 +116,6 @@ python manage.py test
 docker compose run --rm web python manage.py test
 ```
 
-Cobren l'inici de sessió obligatori, el registre, el CRUD de tasques, els
-filtres i que una usuària no pot manipular les tasques d'una altra (404).
+Cobren l'inici de sessió obligatori, el registre, el CRUD de tasques i de
+projectes, els filtres d'estat i de projecte (pendents per defecte) i que una
+usuària no pot manipular les tasques ni els projectes d'una altra (404).

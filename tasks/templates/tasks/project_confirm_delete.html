@@ -1,0 +1,19 @@
+{% extends "tasks/base.html" %}
+
+{% block title %}Esborrar projecte · ToDo{% endblock %}
+
+{% block content %}
+<h1>Esborrar projecte</h1>
+<p>
+  Vols esborrar <strong>«{{ project.name }}»</strong>? Aquesta acció no es pot desfer.
+  Les tasques d'aquest projecte no s'esborraran: quedaran «sense projecte».
+</p>
+
+<form method="post" class="task-form">
+  {% csrf_token %}
+  <div class="form-actions">
+    <button type="submit" class="btn danger">Sí, esborra'l</button>
+    <a class="btn secondary" href="{% url 'tasks:project_list' %}">Cancel·la</a>
+  </div>
+</form>
+{% endblock %}

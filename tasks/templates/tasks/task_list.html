@@ -9,16 +9,27 @@
 </div>
 
 <ul class="filters">
-  <li><a class="{% if not current_filter %}active{% endif %}" href="{% url 'tasks:list' %}">Totes</a></li>
-  <li><a class="{% if current_filter == 'pendents' %}active{% endif %}" href="?filtre=pendents">Pendents</a></li>
-  <li><a class="{% if current_filter == 'fetes' %}active{% endif %}" href="?filtre=fetes">Completades</a></li>
+  <li><a class="{% if current_filter == 'pendents' %}active{% endif %}" href="{% querystring filtre=None %}">Pendents</a></li>
+  <li><a class="{% if current_filter == 'fetes' %}active{% endif %}" href="{% querystring filtre='fetes' %}">Completades</a></li>
+  <li><a class="{% if current_filter == 'totes' %}active{% endif %}" href="{% querystring filtre='totes' %}">Totes</a></li>
+</ul>
+
+<ul class="filters projects-filter">
+  <li><a class="{% if project_filter == 'tots' %}active{% endif %}" href="{% querystring projecte=None %}">Tots els projectes</a></li>
+  <li><a class="{% if project_filter == 'cap' %}active{% endif %}" href="{% querystring projecte='cap' %}">Sense projecte</a></li>
+  {% for project in projects %}
+    <li>
+      <a class="{% if project == current_project %}active{% endif %}"
+         href="{% querystring projecte=project.pk %}">{{ project.name }}</a>
+    </li>
+  {% endfor %}
 </ul>
 
 {% if tasks %}
   <ul class="tasks">
     {% for task in tasks %}
       <li class="task {% if task.done %}done{% endif %}{% if task.is_overdue %} overdue{% endif %}">
-        <form method="post" action="{% url 'tasks:toggle' task.pk %}" class="inline-form">
+        <form method="post" action="{% url 'tasks:toggle' task.pk %}?{{ request.GET.urlencode }}" class="inline-form">
           {% csrf_token %}
           <button type="submit" class="check" title="{% if task.done %}Marca com a pendent{% else %}Marca com a feta{% endif %}">
             {{ task.done|yesno:"✓,∘" }}
@@ -27,6 +38,7 @@
 
         <div class="task-main">
           <span class="task-title">{{ task.title }}</span>
+          {% if task.project %}<span class="task-project">{{ task.project.name }}</span>{% endif %}
           {% if task.notes %}<span class="task-notes">{{ task.notes }}</span>{% endif %}
           {% if task.due_date %}
             <span class="task-due {% if task.is_overdue %}overdue{% endif %}">
@@ -36,8 +48,8 @@
         </div>
 
         <div class="task-actions">
-          <a class="btn small secondary" href="{% url 'tasks:edit' task.pk %}">Editar</a>
-          <a class="btn small danger" href="{% url 'tasks:delete' task.pk %}">Esborrar</a>
+          <a class="btn small secondary" href="{% url 'tasks:edit' task.pk %}?{{ request.GET.urlencode }}">Editar</a>
+          <a class="btn small danger" href="{% url 'tasks:delete' task.pk %}?{{ request.GET.urlencode }}">Esborrar</a>
         </div>
       </li>
     {% endfor %}
@@ -46,8 +58,12 @@
   <p class="empty">
     {% if current_filter == 'fetes' %}
       Encara no has completat cap tasca.
+    {% elif current_project %}
+      No hi ha tasques a «{{ current_project.name }}» amb aquest filtre.
+    {% elif project_filter == 'cap' %}
+      No hi ha tasques sense projecte.
     {% else %}
-      No hi ha tasques. Fes-ne una de nova 🙂
+      No hi ha tasques pendents. Tot completat! 🙂
     {% endif %}
   </p>
 {% endif %}

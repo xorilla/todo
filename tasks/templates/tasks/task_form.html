@@ -10,7 +10,7 @@
   {{ form.as_p }}
   <div class="form-actions">
     <button type="submit" class="btn">Guardar</button>
-    <a class="btn secondary" href="{% url 'tasks:list' %}">Cancel·la</a>
+    <a class="btn secondary" href="{{ back_url }}">Cancel·la</a>
   </div>
 </form>
 {% endblock %}
