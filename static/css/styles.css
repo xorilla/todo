@@ -290,17 +290,24 @@ form label {
 form input[type="text"],
 form input[type="password"],
 form input[type="date"],
-form textarea {
+form textarea,
+form select {
   width: 100%;
   padding: 0.55rem 0.7rem;
   border: 1px solid var(--border);
   border-radius: var(--radius);
   font: inherit;
   background: #fff;
+  color: var(--text);
+}
+
+form select {
+  cursor: pointer;
 }
 
 form input:focus,
-form textarea:focus {
+form textarea:focus,
+form select:focus {
   outline: 2px solid var(--primary);
   outline-offset: 1px;
   border-color: var(--primary);
