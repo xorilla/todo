@@ -51,6 +51,27 @@ body {
   font-size: 0.95rem;
 }
 
+/* Enllaços de navegació del header (píndoles, com els filtres) */
+.navlink {
+  display: inline-block;
+  padding: 0.25rem 0.7rem;
+  border-radius: 999px;
+  text-decoration: none;
+  color: var(--muted);
+  font-size: 0.92rem;
+}
+
+.navlink:hover {
+  color: var(--primary);
+  background: #eff6ff;
+}
+
+.navlink.active {
+  color: var(--primary);
+  font-weight: 600;
+  background: #eff6ff;
+}
+
 /* Contenidor principal */
 .container {
   max-width: 640px;

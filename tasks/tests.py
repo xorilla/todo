@@ -165,6 +165,29 @@ class TaskTests(TestCase):
         self.assertContains(response, "Comprar pa")
         self.assertContains(response, "Ja feta")
 
+    def test_header_nav_links_to_tasks_and_projects(self):
+        response = self.client.get(reverse("tasks:list"))
+        self.assertContains(response, f'href="{reverse("tasks:list")}"')
+        self.assertContains(response, f'href="{reverse("tasks:project_list")}"')
+
+    def test_nav_highlights_current_section(self):
+        response = self.client.get(
+            reverse("tasks:list") + "?filtre=totes"
+        )
+        self.assertContains(
+            response, f'<a class="navlink active" href="{reverse("tasks:list")}">Tasques</a>'
+        )
+
+        response = self.client.get(reverse("tasks:project_list"))
+        self.assertContains(
+            response,
+            f'<a class="navlink active" href="{reverse("tasks:project_list")}">Projectes</a>',
+        )
+        self.assertNotContains(
+            response,
+            f'<a class="navlink active" href="{reverse("tasks:list")}">Tasques</a>',
+        )
+
 
 class ProjectTests(TestCase):
     def setUp(self):
