@@ -19,7 +19,13 @@ class TaskForm(forms.ModelForm):
                 attrs={"autofocus": True, "placeholder": "p. ex. Comprar llet"}
             ),
             "notes": forms.Textarea(attrs={"rows": 3}),
-            "due_date": forms.DateInput(attrs={"type": "date"}),
+            "due_date": forms.DateInput(
+                attrs={"type": "date"},
+                # <input type="date"> només admet el format ISO; amb la
+                # localització en català es renderitzaria "d/m/A" i el
+                # navegador ignoraria el valor (la data es perdria a l'editar).
+                format="%Y-%m-%d",
+            ),
         }
 
 

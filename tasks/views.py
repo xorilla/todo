@@ -111,7 +111,14 @@ def task_edit(request, pk):
     task = _get_own_task(request, pk)
 
     if request.method == "POST":
-        form = TaskForm(request.POST, instance=task, user=request.user)
+        # Si la petició no inclou el camp de data (p. ex. un POST fet de fora
+        # del formulari), es conserva la data que ja tenia la tasca: enviar
+        # "" explícitament sí que l'esborra.
+        data = request.POST
+        if "due_date" not in data and task.due_date:
+            data = data.copy()
+            data["due_date"] = task.due_date
+        form = TaskForm(data, instance=task, user=request.user)
         if form.is_valid():
             form.save()
             messages.success(request, "Tasca actualitzada.")

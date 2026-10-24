@@ -1,3 +1,5 @@
+from datetime import date
+
 from django.contrib.auth.models import User
 from django.test import TestCase
 from django.urls import reverse
@@ -71,6 +73,46 @@ class TaskTests(TestCase):
         self.task.refresh_from_db()
         self.assertEqual(self.task.title, "Comprar pa integral")
         self.assertContains(response, "Comprar pa integral")
+
+    def test_edit_form_shows_date_in_iso_format(self):
+        """El valor de la data s'ha de renderitzar en ISO per al widget date."""
+        self.task.due_date = date(2026, 3, 14)
+        self.task.save()
+        response = self.client.get(reverse("tasks:edit", args=[self.task.pk]))
+        self.assertContains(response, 'value="2026-03-14"')
+
+    def test_edit_keeps_due_date_when_sent_unchanged(self):
+        """Editar sense canviar la data conserva la data anterior."""
+        self.task.due_date = date(2026, 3, 14)
+        self.task.save()
+        self.client.post(
+            reverse("tasks:edit", args=[self.task.pk]),
+            {"title": "Comprar pa", "notes": "", "due_date": "2026-03-14"},
+        )
+        self.task.refresh_from_db()
+        self.assertEqual(self.task.due_date, date(2026, 3, 14))
+
+    def test_edit_keeps_due_date_when_field_not_sent(self):
+        """Si el POST no inclou el camp de data, es conserva la que ja tenia."""
+        self.task.due_date = date(2026, 3, 14)
+        self.task.save()
+        self.client.post(
+            reverse("tasks:edit", args=[self.task.pk]),
+            {"title": "Comprar pa", "notes": ""},
+        )
+        self.task.refresh_from_db()
+        self.assertEqual(self.task.due_date, date(2026, 3, 14))
+
+    def test_edit_can_clear_due_date(self):
+        """Enviar el camp de data buit explicitament esborra la data."""
+        self.task.due_date = date(2026, 3, 14)
+        self.task.save()
+        self.client.post(
+            reverse("tasks:edit", args=[self.task.pk]),
+            {"title": "Comprar pa", "notes": "", "due_date": ""},
+        )
+        self.task.refresh_from_db()
+        self.assertIsNone(self.task.due_date)
 
     def test_toggle_marks_done_and_undone(self):
         self.client.post(reverse("tasks:toggle", args=[self.task.pk]))
