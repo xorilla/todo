@@ -416,3 +416,15 @@ form p.errorlist {
 .linklike:hover {
   text-decoration: underline;
 }
+
+.icon-btn {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.25rem;
+  color: var(--muted);
+}
+
+.icon-btn:hover {
+  text-decoration: none;
+  color: var(--primary);
+}
