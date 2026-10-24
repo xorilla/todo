@@ -7,6 +7,9 @@
   --primary: #2563eb;
   --primary-dark: #1d4ed8;
   --danger: #dc2626;
+  --warning: #d97706;
+  --warning-light: #f59e0b;
+  --warning-dark: #b45309;
   --border: #e5e7eb;
   --radius: 10px;
 }
@@ -269,6 +272,10 @@ h1 {
   color: var(--muted);
 }
 
+.task.in-progress {
+  border-left: 4px solid var(--warning-light);
+}
+
 .task.overdue {
   border-left: 4px solid var(--danger);
 }
@@ -277,7 +284,7 @@ h1 {
   content: "· en procés";
   font-weight: 400;
   font-size: 0.85rem;
-  color: var(--primary);
+  color: var(--warning);
   white-space: nowrap;
 }
 
@@ -305,7 +312,13 @@ h1 {
 }
 
 .task.in-progress .check {
-  border-color: var(--primary);
+  background: var(--warning-light);
+  border-color: var(--warning-light);
+  color: #fff;
+}
+
+.task.in-progress .check:hover {
+  border-color: var(--warning-dark);
 }
 
 /* Formularis */
