@@ -69,12 +69,12 @@ class Task(models.Model):
     due_date = models.DateField("data límit", blank=True, null=True)
 
     class Meta:
-        # Primer les pendents, després les en procés, i al final les completades
+        # Les pendents i les en procés es barregen, ordenades per data;
+        # les completades queden sempre al final.
         ordering = [
             models.Case(
-                models.When(status="pending", then=models.Value(0)),
-                models.When(status="in_progress", then=models.Value(1)),
-                default=models.Value(2),
+                models.When(status="done", then=models.Value(1)),
+                default=models.Value(0),
                 output_field=models.IntegerField(),
             ),
             "due_date",
