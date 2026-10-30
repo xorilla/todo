@@ -5,6 +5,11 @@
 {% block content %}
 <h1>Esborrar tasca</h1>
 <p>Vols esborrar <strong>«{{ task.title }}»</strong>? Aquesta acció no es pot desfer.</p>
+{% if task.subtask_counts.1 == 1 %}
+  <p class="form-error">També s'esborrarà la seva subtasca.</p>
+{% elif task.subtask_counts.1 %}
+  <p class="form-error">També s'esborraran les {{ task.subtask_counts.1 }} subtasques.</p>
+{% endif %}
 
 <form method="post" class="task-form">
   {% csrf_token %}

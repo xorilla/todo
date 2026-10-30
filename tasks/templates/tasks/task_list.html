@@ -29,7 +29,7 @@
 {% if tasks %}
   <ul class="tasks">
     {% for task in tasks %}
-      <li class="task {% if task.done %}done{% endif %}{% if task.in_progress %} in-progress{% endif %}{% if task.is_overdue %} overdue{% endif %}">
+      <li class="task {% if task.done %}done{% endif %}{% if task.in_progress %} in-progress{% endif %}{% if task.is_overdue %} overdue{% endif %}{% if task.subtask_counts.1 %} has-subtasks{% endif %}">
         <form method="post" action="{% url 'tasks:toggle' task.pk %}?{{ request.GET.urlencode }}" class="inline-form">
           {% csrf_token %}
           <button type="submit" class="check" title="{% if task.done %}Marca com a pendent{% elif task.in_progress %}Marca com a finalitzada{% else %}Marca com a iniciada{% endif %}">
@@ -46,12 +46,49 @@
               📅 {{ task.due_date }}{% if task.is_overdue %} · endarrerida{% endif %}
             </span>
           {% endif %}
+          {% if task.subtask_counts.1 %}
+            <span class="subtask-progress">
+              {{ task.subtask_counts.0 }}/{{ task.subtask_counts.1 }} subtasques completades
+            </span>
+          {% endif %}
         </div>
 
         <div class="task-actions">
+          <a class="btn small secondary"
+             href="{% url 'tasks:create' %}?pare={{ task.pk }}&amp;{{ request.GET.urlencode }}">+ Subtasca</a>
           <a class="btn small secondary" href="{% url 'tasks:edit' task.pk %}?{{ request.GET.urlencode }}">Editar</a>
           <a class="btn small danger" href="{% url 'tasks:delete' task.pk %}?{{ request.GET.urlencode }}">Esborrar</a>
         </div>
+
+        {% if task.subtasks.all %}
+          <ul class="subtasks">
+            {% for sub in task.subtasks.all %}
+              <li class="subtask {% if sub.done %}done{% endif %}{% if sub.in_progress %} in-progress{% endif %}{% if sub.is_overdue %} overdue{% endif %}">
+                <form method="post" action="{% url 'tasks:toggle' sub.pk %}?{{ request.GET.urlencode }}" class="inline-form">
+                  {% csrf_token %}
+                  <button type="submit" class="check" title="{% if sub.done %}Marca com a pendent{% elif sub.in_progress %}Marca com a finalitzada{% else %}Marca com a iniciada{% endif %}">
+                    {% if sub.done %}✓{% elif sub.in_progress %}◐{% else %}∘{% endif %}
+                  </button>
+                </form>
+
+                <div class="task-main">
+                  <span class="task-title">{{ sub.title }}</span>
+                  {% if sub.notes %}<span class="task-notes">{{ sub.notes }}</span>{% endif %}
+                  {% if sub.due_date %}
+                    <span class="task-due {% if sub.is_overdue %}overdue{% endif %}">
+                      📅 {{ sub.due_date }}{% if sub.is_overdue %} · endarrerida{% endif %}
+                    </span>
+                  {% endif %}
+                </div>
+
+                <div class="task-actions">
+                  <a class="btn small secondary" href="{% url 'tasks:edit' sub.pk %}?{{ request.GET.urlencode }}">Editar</a>
+                  <a class="btn small danger" href="{% url 'tasks:delete' sub.pk %}?{{ request.GET.urlencode }}">Esborrar</a>
+                </div>
+              </li>
+            {% endfor %}
+          </ul>
+        {% endif %}
       </li>
     {% endfor %}
   </ul>

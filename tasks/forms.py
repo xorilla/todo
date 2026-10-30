@@ -4,12 +4,21 @@ from .models import Project, Task
 
 
 class TaskForm(forms.ModelForm):
-    def __init__(self, *args, user=None, **kwargs):
-        """Limita els projectes disponibles als de l'usuari actual."""
+    def __init__(self, *args, user=None, parent=None, **kwargs):
+        """Limita els projectes disponibles als de l'usuari actual.
+
+        Si es crea com a subtasca (parent), el projecte s'hereta del pare
+        i no es pot triar: el camp s'elimina del formulari.
+        """
         super().__init__(*args, **kwargs)
+        self.parent = parent
         if user is not None:
             self.fields["project"].queryset = Project.objects.filter(user=user)
         self.fields["project"].empty_label = "Sense projecte"
+        # Les subtasques no trien projecte (l'hereten del pare), ni al crear
+        # ni a l'editar.
+        if self.parent is not None or self.instance.parent_id:
+            self.fields.pop("project")
 
     class Meta:
         model = Task
@@ -27,6 +36,17 @@ class TaskForm(forms.ModelForm):
                 format="%Y-%m-%d",
             ),
         }
+
+    def save(self, commit: bool = True) -> Task:
+        task = super().save(commit=False)
+        if self.parent is not None:
+            task.parent = self.parent
+            task.user = self.parent.user
+            # Les subtasques hereden sempre el projecte de la pare.
+            task.project = self.parent.project
+        if commit:
+            task.save()
+        return task
 
 
 class ProjectForm(forms.ModelForm):

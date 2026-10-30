@@ -2,7 +2,9 @@ from django.contrib import messages
 from django.contrib.auth import login
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.forms import UserCreationForm
+from django.db import transaction
 from django.db.models import Count, Q
+from django.http import Http404
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.utils import timezone
@@ -31,15 +33,21 @@ def register(request):
 
 
 def _list_url(request) -> str:
-    """URL de la llista amb els filtres de la petició actual (si n'hi ha)."""
+    """URL de la llista amb els filtres de la petició actual (si n'hi ha).
+
+    El paràmetre "pare" (de crear subtasques) no es conserva: no és un filtre.
+    """
     url = reverse("tasks:list")
-    query = request.GET.urlencode()
-    return f"{url}?{query}" if query else url
+    query = request.GET.copy()
+    query.pop("pare", None)
+    encoded = query.urlencode()
+    return f"{url}?{encoded}" if encoded else url
 
 
 @login_required
 def task_list(request):
-    tasks = Task.objects.filter(user=request.user)
+    tasks = Task.objects.filter(user=request.user, parent__isnull=True)
+    tasks = tasks.prefetch_related("subtasks")
 
     # Sense paràmetre es mostren les no completades ("totes" per veure-les totes).
     filt = request.GET.get("filtre", "")
@@ -83,29 +91,62 @@ def task_list(request):
     )
 
 
+def _get_own_task(request, pk: int) -> Task:
+    """Carrega la tasca només si pertany a l'usuari actual (404 altrament)."""
+    return get_object_or_404(Task, pk=pk, user=request.user)
+
+
+def _parent_from_request(request) -> Task | None:
+    """Carrega la tasca pare indicada amb `pare=<pk>`.
+
+    Només l'accepta si és de l'usuari i és una tasca arrel: només un nivell
+    de jerarquia, les subtasques no poden tenir subtasques.
+    """
+    pare_pk = request.GET.get("pare")
+    if pare_pk is None:
+        return None
+    try:
+        parent = _get_own_task(request, int(pare_pk))
+    except ValueError:
+        return None
+    if parent.parent_id is not None:
+        raise Http404("Una subtasca no pot tenir subtasques.")
+    return parent
+
+
 @login_required
 def task_create(request):
+    parent = _parent_from_request(request)
+
     if request.method == "POST":
-        form = TaskForm(request.POST, user=request.user)
+        form = TaskForm(request.POST, user=request.user, parent=parent)
         if form.is_valid():
             task = form.save(commit=False)
-            task.user = request.user
+            if parent is not None:
+                # Formulari sense projecte: l'heretem del pare per consistència.
+                task.user = parent.user
+                task.project = parent.project
+            else:
+                task.user = request.user
             task.save()
-            messages.success(request, "Tasca creada.")
+            if parent is not None:
+                messages.success(request, "Subtasca creada.")
+            else:
+                messages.success(request, "Tasca creada.")
             return redirect(_list_url(request))
     else:
-        form = TaskForm(user=request.user)
+        form = TaskForm(user=request.user, parent=parent)
 
     return render(
         request,
         "tasks/task_form.html",
-        {"form": form, "editing": False, "back_url": _list_url(request)},
+        {
+            "form": form,
+            "editing": False,
+            "parent": parent,
+            "back_url": _list_url(request),
+        },
     )
-
-
-def _get_own_task(request, pk: int) -> Task:
-    """Carrega la tasca només si pertany a l'usuari actual (404 altrament)."""
-    return get_object_or_404(Task, pk=pk, user=request.user)
 
 
 @login_required
@@ -120,9 +161,14 @@ def task_edit(request, pk):
         if "due_date" not in data and task.due_date:
             data = data.copy()
             data["due_date"] = task.due_date
+        old_project_id = task.project_id
         form = TaskForm(data, instance=task, user=request.user)
         if form.is_valid():
             form.save()
+            # Com que les subtasques hereden el projecte del pare, si es mou
+            # el pare de projecte les subtasques s'hi van amb ell.
+            if task.subtasks.count() and task.project_id != old_project_id:
+                task.subtasks.update(project=task.project)
             messages.success(request, "Tasca actualitzada.")
             return redirect(_list_url(request))
     else:
@@ -138,14 +184,33 @@ def task_edit(request, pk):
 @login_required
 @require_POST
 def task_toggle(request, pk):
-    """Avança la tasca al següent estat: pendent → en procés → completada."""
+    """Avança la tasca al següent estat: pendent → en procés → completada.
+
+    En completar una tasca, les seves subtasques es completen també; en
+    tornar-la a posar pendent, en canvi, no es rescaten: queden com estan.
+    """
     task = _get_own_task(request, pk)
     new_status = task.advance_state()
-    task.save(update_fields=["status", "updated_at"])
+    subs = task.subtasks.exclude(status=Task.Status.DONE) if new_status == Task.Status.DONE else Task.objects.none()
+    new_subtasks = subs.count()
+    with transaction.atomic():
+        if new_subtasks:
+            # Propagació cap avall: només les que encara no estaven fetes.
+            subs.update(
+                status=Task.Status.DONE,
+                updated_at=timezone.now(),
+            )
+        task.save(update_fields=["status", "updated_at"])
     if new_status == Task.Status.IN_PROGRESS:
         messages.info(request, "Tasca iniciada. Endavant!")
     elif new_status == Task.Status.DONE:
         messages.success(request, "Tasca completada. Bona feina!")
+        if new_subtasks == 1:
+            messages.info(request, "La seva subtasca també s'ha completat.")
+        elif new_subtasks:
+            messages.info(
+                request, f"També s'han completat les {new_subtasks} subtasques."
+            )
     else:
         messages.info(request, "Tasca tornada a posar com a pendent.")
     return redirect(_list_url(request))
@@ -156,8 +221,16 @@ def task_delete(request, pk):
     task = _get_own_task(request, pk)
 
     if request.method == "POST":
+        num_subtasks = task.subtasks.count()
         task.delete()
-        messages.success(request, "Tasca esborrada.")
+        if num_subtasks == 0:
+            messages.success(request, "Tasca esborrada.")
+        elif num_subtasks == 1:
+            messages.success(request, "Tasca esborrada, i també la seva subtasca.")
+        else:
+            messages.success(
+                request, f"Tasca esborrada, i també les {num_subtasks} subtasques."
+            )
         return redirect(_list_url(request))
 
     return render(

@@ -331,3 +331,184 @@ class TaskProjectFilterTests(TestCase):
     def test_task_shows_project_label(self):
         response = self.client.get(reverse("tasks:list") + "?filtre=totes")
         self.assertContains(response, "Feina")
+
+
+class SubtaskTests(TestCase):
+    """Un sol nivell de jerarquia: tasca → subtasques (hereten projecte)."""
+
+    def setUp(self):
+        self.user = User.objects.create_user("anna", password=PASSWORD)
+        self.other = User.objects.create_user("pere", password=PASSWORD)
+        self.client.force_login(self.user)
+        self.project = Project.objects.create(user=self.user, name="Casa")
+        self.task = Task.objects.create(
+            user=self.user, project=self.project, title="Netejar el garatge"
+        )
+
+    def test_create_subtask_via_url(self):
+        response = self.client.post(
+            reverse("tasks:create") + f"?pare={self.task.pk}",
+            {"title": "Traieu-ho tot", "notes": "", "due_date": ""},
+            follow=True,
+        )
+        sub = Task.objects.get(title="Traieu-ho tot")
+        self.assertEqual(sub.parent, self.task)
+        # Hereda usuari i projecte del pare.
+        self.assertEqual(sub.user, self.user)
+        self.assertEqual(sub.project, self.project)
+        self.assertContains(response, "Subtasca creada.")
+
+    def test_subtask_form_has_no_project_field(self):
+        response = self.client.get(reverse("tasks:create") + f"?pare={self.task.pk}")
+        self.assertNotContains(response, 'name="project"')
+
+    def test_cannot_create_subtask_of_foreign_task(self):
+        foreign = Task.objects.create(user=self.other, title="Aliena")
+        self.client.post(
+            reverse("tasks:create") + f"?pare={foreign.pk}",
+            {"title": "Intrusa"},
+        )
+        self.assertFalse(Task.objects.filter(title="Intrusa").exists())
+
+    def test_cannot_nest_subtask_under_subtask(self):
+        parent = Task.objects.create(user=self.user, title="Pare")
+        sub = Task.objects.create(user=self.user, parent=parent, title="Fill")
+        response = self.client.get(reverse("tasks:create") + f"?pare={sub.pk}")
+        self.assertEqual(response.status_code, 404)
+
+    def test_model_rejects_deep_nesting(self):
+        """La validació del model també impedeix subtasques de subtasques."""
+        from django.core.exceptions import ValidationError as VE
+
+        sub = Task.objects.create(user=self.user, parent=self.task, title="Fill")
+        second = Task(user=self.user, parent=sub, title="Net")
+        with self.assertRaises(VE):
+            second.clean()
+
+    def test_model_rejects_foreign_parent(self):
+        from django.core.exceptions import ValidationError as VE
+
+        foreign = Task.objects.create(user=self.other, title="Aliena")
+        sub = Task(user=self.user, parent=foreign, title="Robada")
+        with self.assertRaises(VE):
+            sub.clean()
+
+    def test_list_shows_subtask_nested_under_parent(self):
+        Task.objects.create(
+            user=self.user, parent=self.task, title="Traieu-ho tot"
+        )
+        response = self.client.get(reverse("tasks:list"))
+        self.assertContains(response, "Traieu-ho tot")
+        self.assertContains(response, "subtasques completades")
+
+    def test_default_filter_hides_root_done_but_keeps_pending_parent(self):
+        """Les subs es mostren dins el pare; el filtre actua a l'arrel."""
+        Task.objects.create(
+            user=self.user,
+            parent=self.task,
+            title="Ja feta",
+            status=Task.Status.DONE,
+        )
+        # La pare pendent, amb la seva subtasca feta dins, es mostra així.
+        response = self.client.get(reverse("tasks:list"))
+        self.assertContains(response, "Netejar el garatge")
+        self.assertContains(response, "Ja feta")
+        # Com a arrel feta, en canvi, el filtre per defecte l'amaga.
+        response = self.client.get(reverse("tasks:list") + "?filtre=fetes")
+        self.assertNotContains(response, "Netejar el garatge")
+
+    def test_completing_parent_completes_subtasks(self):
+        sub = Task.objects.create(user=self.user, parent=self.task, title="Fill")
+        self.client.post(reverse("tasks:toggle", args=[self.task.pk]))  # en procés
+        self.client.post(reverse("tasks:toggle", args=[self.task.pk]))  # feta
+        sub.refresh_from_db()
+        self.task.refresh_from_db()
+        self.assertEqual(self.task.status, Task.Status.DONE)
+        self.assertEqual(sub.status, Task.Status.DONE)
+
+    def test_completed_subtasks_are_not_retagged(self):
+        """Les que ja eren completes no es toquen en propagar."""
+        sub = Task.objects.create(
+            user=self.user,
+            parent=self.task,
+            title="Ja feta",
+            status=Task.Status.DONE,
+        )
+        self.client.post(reverse("tasks:toggle", args=[self.task.pk]))  # en procés
+        self.client.post(reverse("tasks:toggle", args=[self.task.pk]))  # feta
+        sub.refresh_from_db()
+        self.task.refresh_from_db()
+        self.assertEqual(self.task.status, Task.Status.DONE)
+        self.assertEqual(sub.status, Task.Status.DONE)
+
+    def test_reverting_parent_does_not_revert_subtasks(self):
+        """Tornar el pare a pendent NO rescata les subtasques."""
+        sub = Task.objects.create(user=self.user, parent=self.task, title="Fill")
+        self.task.status = Task.Status.IN_PROGRESS
+        self.task.save()
+        self.client.post(reverse("tasks:toggle", args=[self.task.pk]))  # pare → feta
+        self.client.post(reverse("tasks:toggle", args=[self.task.pk]))  # pare → pendent
+        sub.refresh_from_db()
+        self.task.refresh_from_db()
+        self.assertEqual(self.task.status, Task.Status.PENDING)
+        self.assertEqual(sub.status, Task.Status.DONE)
+
+    def test_toggling_subtask_independently(self):
+        sub = Task.objects.create(user=self.user, parent=self.task, title="Fill")
+        self.client.post(reverse("tasks:toggle", args=[sub.pk]))
+        sub.refresh_from_db()
+        self.task.refresh_from_db()
+        self.assertEqual(sub.status, Task.Status.IN_PROGRESS)
+        self.assertEqual(self.task.status, Task.Status.PENDING)
+
+    def test_editing_subtask_uses_parent_project(self):
+        """Editar una subtasca no toca el projecte heretat del pare."""
+        sub = Task.objects.create(
+            user=self.user,
+            parent=self.task,
+            project=self.project,  # al flux real ho posa el formulari
+            title="Fill",
+        )
+        self.client.post(
+            reverse("tasks:edit", args=[sub.pk]),
+            {"title": "Fill editat", "notes": "", "due_date": ""},
+        )
+        sub.refresh_from_db()
+        self.assertEqual(sub.title, "Fill editat")
+        self.assertEqual(sub.project, self.project)
+
+    def test_moving_parent_project_moves_subtasks(self):
+        """Al moure el pare de projecte, les subtasques s'hi van amb ell."""
+        new_project = Project.objects.create(user=self.user, name="Nau")
+        sub = Task.objects.create(user=self.user, parent=self.task, title="Fill")
+        self.client.post(
+            reverse("tasks:edit", args=[self.task.pk]),
+            {
+                "title": "Netejar el garatge",
+                "notes": "",
+                "due_date": "",
+                "project": new_project.pk,
+            },
+            follow=True,
+        )
+        sub.refresh_from_db()
+        self.task.refresh_from_db()
+        self.assertEqual(self.task.project, new_project)
+        self.assertEqual(sub.project, new_project)
+
+    def test_delete_parent_deletes_subtasks(self):
+        Task.objects.create(user=self.user, parent=self.task, title="Fill 1")
+        Task.objects.create(user=self.user, parent=self.task, title="Fill 2")
+        response = self.client.get(reverse("tasks:delete", args=[self.task.pk]))
+        self.assertContains(response, "les 2 subtasques")
+        self.client.post(reverse("tasks:delete", args=[self.task.pk]))
+        self.assertFalse(Task.objects.filter(pk=self.task.pk).exists())
+        self.assertFalse(Task.objects.filter(parent=self.task).exists())
+
+    def test_project_counts_include_subtasks(self):
+        """El recompte del projecte tracta les subtasques com tasques."""
+        Task.objects.create(
+            user=self.user, parent=self.task, project=self.project, title="Fill"
+        )
+        response = self.client.get(reverse("tasks:project_list"))
+        self.assertContains(response, "2 pendents · 2 en total")

@@ -1,4 +1,5 @@
 from django.conf import settings
+from django.core.exceptions import ValidationError
 from django.db import models
 from django.urls import reverse
 from django.utils import timezone
@@ -56,6 +57,14 @@ class Task(models.Model):
         related_name="tasks",
         verbose_name="projecte",
     )
+    parent = models.ForeignKey(
+        "self",
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        related_name="subtasks",
+        verbose_name="tasca pare",
+    )
     title = models.CharField("títol", max_length=200)
     notes = models.TextField("notes", blank=True)
     status = models.CharField(
@@ -85,6 +94,20 @@ class Task(models.Model):
 
     def __str__(self) -> str:
         return self.title
+
+    def clean(self):
+        """Un sol nivell de jerarquia: les subtasques no en poden tenir."""
+        super().clean()
+        if self.parent_id:
+            parent = self.parent
+            if parent.parent_id is not None:
+                raise ValidationError(
+                    {"parent": "Una subtasca no pot tenir subtasques."}
+                )
+            if self.user_id and parent.user_id != self.user_id:
+                raise ValidationError(
+                    {"parent": "La tasca pare ha de ser teva."}
+                )
 
     def get_absolute_url(self) -> str:
         return reverse("tasks:list")
@@ -116,3 +139,13 @@ class Task(models.Model):
             and self.status != self.Status.DONE
             and self.due_date < timezone.localdate()
         )
+
+    @property
+    def subtask_counts(self) -> "tuple[int, int]":
+        """(completades, totals) entre les subtasques pròpies.
+
+        Fa servir la caché del prefetch_related quan hi ha; no toca la BD.
+        """
+        subs = list(self.subtasks.all())
+        done = sum(1 for s in subs if s.status == self.Status.DONE)
+        return done, len(subs)

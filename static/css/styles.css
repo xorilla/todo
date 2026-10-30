@@ -321,6 +321,84 @@ h1 {
   border-color: var(--warning-dark);
 }
 
+/* Subtasques: les parets poden tenir subtasques d'un sol nivell.
+   .tasks .task amb flex-wrap permet que el bloc de subtasques
+   (width 100%) salte a una línia pròpia dins la mateixa targeta. */
+.tasks .task {
+  flex-wrap: wrap;
+}
+
+.subtask-progress {
+  color: var(--muted);
+  font-size: 0.8rem;
+}
+
+.subtasks {
+  list-style: none;
+  width: 100%;
+  margin: 0.5rem 0.55rem 0 0.1rem;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.subtask {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.55rem;
+  padding: 0.45rem 0.65rem;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+
+.subtask .check {
+  width: 1.5rem;
+  height: 1.5rem;
+  font-size: 0.85rem;
+}
+
+.subtask .task-title {
+  font-size: 0.92rem;
+}
+
+.subtask.in-progress {
+  border-left: 3px solid var(--warning-light);
+}
+
+.subtask.overdue {
+  border-left: 3px solid var(--danger);
+}
+
+.subtask.in-progress .task-title::after {
+  content: "· en procés";
+  font-weight: 400;
+  font-size: 0.8rem;
+  color: var(--warning);
+  white-space: nowrap;
+}
+
+.subtask.done .check {
+  background: var(--primary);
+  border-color: var(--primary);
+  color: #fff;
+}
+
+.subtask.done .task-title {
+  text-decoration: line-through;
+  color: var(--muted);
+}
+
+.subtask .task-actions {
+  gap: 0.3rem;
+}
+
+.subtask .btn.small {
+  padding: 0.15rem 0.45rem;
+  font-size: 0.78rem;
+}
+
 /* Formularis */
 form p {
   margin: 0 0 0.9rem;

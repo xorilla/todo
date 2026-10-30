@@ -1,9 +1,13 @@
 {% extends "tasks/base.html" %}
 
-{% block title %}{% if editing %}Editar tasca{% else %}Nova tasca{% endif %} · ToDo{% endblock %}
+{% block title %}{% if editing %}Editar tasca{% elif parent %}Nova subtasca de «{{ parent.title|truncatechars:40 }}»{% else %}Nova tasca{% endif %} · ToDo{% endblock %}
 
 {% block content %}
-<h1>{% if editing %}Editar tasca{% else %}Nova tasca{% endif %}</h1>
+<h1>
+  {% if editing %}Editar tasca
+  {% elif parent %}Nova subtasca de «{{ parent.title|truncatechars:40 }}»
+  {% else %}Nova tasca{% endif %}
+</h1>
 
 <form method="post" class="task-form">
   {% csrf_token %}
