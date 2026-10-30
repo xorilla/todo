@@ -461,6 +461,19 @@ class SubtaskTests(TestCase):
         self.assertEqual(sub.status, Task.Status.IN_PROGRESS)
         self.assertEqual(self.task.status, Task.Status.PENDING)
 
+    def test_starting_parent_does_not_start_subtasks(self):
+        """Posar el pare en procés no posa les subtasques en procés.
+
+        Cada subtasca s'inicia de manera independent; només la
+        finalització es propaga cap avall.
+        """
+        sub = Task.objects.create(user=self.user, parent=self.task, title="Fill")
+        self.client.post(reverse("tasks:toggle", args=[self.task.pk]))
+        sub.refresh_from_db()
+        self.task.refresh_from_db()
+        self.assertEqual(self.task.status, Task.Status.IN_PROGRESS)
+        self.assertEqual(sub.status, Task.Status.PENDING)
+
     def test_editing_subtask_uses_parent_project(self):
         """Editar una subtasca no toca el projecte heretat del pare."""
         sub = Task.objects.create(
