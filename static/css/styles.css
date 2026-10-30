@@ -267,7 +267,9 @@ h1 {
   gap: 0.4rem;
 }
 
-.task.done .task-title {
+/* Els selectors d'estat usen fills directes (>): el bloc de subtasques
+   viu dins el <li> del pare i sense això heretaria el seu estat visual. */
+.task.done > .task-main .task-title {
   text-decoration: line-through;
   color: var(--muted);
 }
@@ -280,7 +282,7 @@ h1 {
   border-left: 4px solid var(--danger);
 }
 
-.task.in-progress .task-title::after {
+.task.in-progress > .task-main .task-title::after {
   content: "· en procés";
   font-weight: 400;
   font-size: 0.85rem;
@@ -305,19 +307,19 @@ h1 {
   border-color: var(--primary);
 }
 
-.task.done .check {
+.task.done > .inline-form .check {
   background: var(--primary);
   border-color: var(--primary);
   color: #fff;
 }
 
-.task.in-progress .check {
+.task.in-progress > .inline-form .check {
   background: var(--warning-light);
   border-color: var(--warning-light);
   color: #fff;
 }
 
-.task.in-progress .check:hover {
+.task.in-progress > .inline-form .check:hover {
   border-color: var(--warning-dark);
 }
 
