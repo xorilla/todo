@@ -4,10 +4,20 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="color-scheme" content="dark">
   <title>{% block title %}ToDo{% endblock %}</title>
+  <script>
+    // Aplica el tema abans de pintar per evitar parpelleig:
+    // tria el desat a localStorage o, si res, la preferència del sistema.
+    (function () {
+      var stored = null;
+      try { stored = localStorage.getItem('theme'); } catch (e) {}
+      var theme = (stored === 'light' || stored === 'dark') ? stored
+        : (window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark');
+      document.documentElement.dataset.theme = theme;
+    })();
+  </script>
   <link rel="icon" type="image/svg+xml" href="{% static 'favicon.svg' %}">
-  <link rel="stylesheet" href="{% static 'css/styles.css' %}?v=4">
+  <link rel="stylesheet" href="{% static 'css/styles.css' %}?v=5">
 </head>
 <body>
   <header class="topbar">
@@ -30,6 +40,16 @@
         </form>
       </nav>
     {% endif %}
+
+    <button type="button" class="icon-btn theme-toggle" aria-label="Canvia el tema" title="Tema clar / fosc">
+      <svg class="icon-sun" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <circle cx="12" cy="12" r="4"/>
+        <path d="M12 2v2m0 16v2M4.93 4.93l1.41 1.41m11.32 11.32 1.41 1.41M2 12h2m16 0h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/>
+      </svg>
+      <svg class="icon-moon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+      </svg>
+    </button>
   </header>
 
   {% if messages %}
@@ -43,5 +63,15 @@
   <main class="container">
     {% block content %}{% endblock %}
   </main>
+
+  <script>
+    // Alternar tema clar/fosc i desar-ne l'elecció.
+    document.querySelector('.theme-toggle').addEventListener('click', function () {
+      var root = document.documentElement;
+      var next = root.dataset.theme === 'dark' ? 'light' : 'dark';
+      root.dataset.theme = next;
+      try { localStorage.setItem('theme', next); } catch (e) {}
+    });
+  </script>
 </body>
 </html>
