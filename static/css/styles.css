@@ -127,8 +127,14 @@ body {
   background: var(--primary-soft);
 }
 
-/* Botó d'alternar tema: es mostra la lluna (canviar a fosc) en clar
-   i el sol (canviar a clar) en fosc. */
+/* Botó d'alternar tema: només la icona, sense fons ni contorn.
+   Es mostra la lluna (canviar a fosc) en clar i el sol (canviar a clar) en fosc. */
+.theme-toggle {
+  border: 0;
+  background: none;
+  cursor: pointer;
+}
+
 .theme-toggle .icon-sun {
   display: none;
 }
