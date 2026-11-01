@@ -1,16 +1,21 @@
-/* ToDo — estil mínim */
+/* ToDo — estil mínim (tema fosc) */
 :root {
-  --bg: #f5f6f8;
-  --card: #ffffff;
-  --text: #1f2937;
-  --muted: #6b7280;
-  --primary: #2563eb;
-  --primary-dark: #1d4ed8;
-  --danger: #dc2626;
-  --warning: #d97706;
+  --bg: #101216;
+  --card: #1a1d24;
+  --card-dim: #14161b;
+  --text: #e5e7eb;
+  --muted: #9ca3af;
+  --primary: #3b82f6;
+  --primary-dark: #2563eb;
+  --primary-soft: rgba(59, 130, 246, 0.16);
+  --primary-border: rgba(59, 130, 246, 0.4);
+  --danger: #ef4444;
+  --danger-soft: rgba(239, 68, 68, 0.12);
+  --danger-border: rgba(239, 68, 68, 0.35);
+  --warning: #fbbf24;
   --warning-light: #f59e0b;
-  --warning-dark: #b45309;
-  --border: #e5e7eb;
+  --warning-dark: #d97706;
+  --border: #2b303a;
   --radius: 10px;
 }
 
@@ -66,13 +71,13 @@ body {
 
 .navlink:hover {
   color: var(--primary);
-  background: #eff6ff;
+  background: var(--primary-soft);
 }
 
 .navlink.active {
   color: var(--primary);
   font-weight: 600;
-  background: #eff6ff;
+  background: var(--primary-soft);
 }
 
 /* Contenidor principal */
@@ -98,23 +103,23 @@ h1 {
   margin: 0.3rem 0;
   padding: 0.55rem 0.9rem;
   border-radius: var(--radius);
-  background: #ecfdf5;
-  color: #065f46;
-  border: 1px solid #a7f3d0;
+  background: rgba(16, 185, 129, 0.12);
+  color: #6ee7b7;
+  border: 1px solid rgba(16, 185, 129, 0.35);
   font-size: 0.92rem;
 }
 
 .message.info,
 .message.warning {
-  background: #eff6ff;
-  color: #1e40af;
-  border-color: #bfdbfe;
+  background: var(--primary-soft);
+  color: #93c5fd;
+  border-color: var(--primary-border);
 }
 
 .message.error {
-  background: #fef2f2;
-  color: #991b1b;
-  border-color: #fecaca;
+  background: var(--danger-soft);
+  color: #fca5a5;
+  border-color: var(--danger-border);
 }
 
 /* Capçalera de pàgina */
@@ -140,11 +145,18 @@ h1 {
 
 .btn:hover {
   background: var(--primary-dark);
+  border-color: var(--primary-dark);
 }
 
 .btn.secondary {
   background: transparent;
   color: var(--primary);
+  border-color: var(--primary);
+}
+
+.btn.secondary:hover {
+  background: var(--primary-soft);
+  border-color: var(--primary);
 }
 
 .btn.danger {
@@ -153,7 +165,8 @@ h1 {
 }
 
 .btn.danger:hover {
-  background: #b91c1c;
+  background: #dc2626;
+  border-color: #dc2626;
 }
 
 .btn.small {
@@ -198,9 +211,9 @@ h1 {
   margin-top: 0.15rem;
   font-size: 0.75rem;
   line-height: 1.6;
-  color: var(--primary);
-  background: #eff6ff;
-  border: 1px solid #bfdbfe;
+  color: #93c5fd;
+  background: var(--primary-soft);
+  border: 1px solid var(--primary-border);
   border-radius: 999px;
   padding: 0 0.55rem;
   width: fit-content;
@@ -296,7 +309,7 @@ h1 {
   height: 1.9rem;
   border: 1.5px solid var(--muted);
   border-radius: 50%;
-  background: #fff;
+  background: transparent;
   color: var(--primary);
   font-size: 1rem;
   cursor: pointer;
@@ -316,7 +329,7 @@ h1 {
 .task.in-progress > .inline-form .check {
   background: var(--warning-light);
   border-color: var(--warning-light);
-  color: #fff;
+  color: #1f2937;
 }
 
 .task.in-progress > .inline-form .check:hover {
@@ -350,7 +363,7 @@ h1 {
   align-items: flex-start;
   gap: 0.55rem;
   padding: 0.45rem 0.65rem;
-  background: var(--bg);
+  background: var(--card-dim);
   border: 1px solid var(--border);
   border-radius: 8px;
 }
@@ -366,7 +379,7 @@ h1 {
 .subtask.in-progress > .inline-form .check {
   background: var(--warning-light);
   border-color: var(--warning-light);
-  color: #fff;
+  color: #1f2937;
 }
 
 .subtask.in-progress > .inline-form .check:hover {
@@ -435,7 +448,7 @@ form select {
   border: 1px solid var(--border);
   border-radius: var(--radius);
   font: inherit;
-  background: #fff;
+  background: var(--card-dim);
   color: var(--text);
 }
 
@@ -519,4 +532,9 @@ form p.errorlist {
 .icon-btn:hover {
   text-decoration: none;
   color: var(--primary);
+}
+
+/* El navegador pinta el dia de les dates amb colors clars: fem-lo fosc */
+input[type="date"]::-webkit-calendar-picker-indicator {
+  filter: invert(0.8);
 }
