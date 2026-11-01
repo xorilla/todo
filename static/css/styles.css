@@ -361,6 +361,18 @@ h1 {
   font-size: 0.85rem;
 }
 
+/* Fill directe (>), com a la tasca pare: pintem el cercle de la subtasca
+   en procés sense que el gris del pare es propagui al bloc de subtasques. */
+.subtask.in-progress > .inline-form .check {
+  background: var(--warning-light);
+  border-color: var(--warning-light);
+  color: #fff;
+}
+
+.subtask.in-progress > .inline-form .check:hover {
+  border-color: var(--warning-dark);
+}
+
 .subtask .task-title {
   font-size: 0.92rem;
 }
