@@ -60,10 +60,12 @@
           <a class="btn small danger" href="{% url 'tasks:delete' task.pk %}?{{ request.GET.urlencode }}">Esborrar</a>
         </div>
 
-        <!-- Desplegables independents de subtasques per estat -->
+        <!-- Acordions de subtasques agrupades per estat -->
         {% if task.subtasks.all %}
-          <details class="subtask-filter">
-            <summary>Pendents ({{ task.pending_subtasks|length }})</summary>
+        <div class="subtask-groups">
+          {% if task.pending_subtasks %}
+          <details class="subtask-group is-pending">
+            <summary><span class="status-icon">∘</span>Pendents<span class="subtask-count">{{ task.pending_subtasks|length }}</span></summary>
             <ul class="subtasks">
               {% for sub in task.pending_subtasks %}
                 <li class="subtask {% if sub.done %}done{% endif %}{% if sub.in_progress %} in-progress{% endif %}{% if sub.is_overdue %} overdue{% endif %}">
@@ -92,9 +94,11 @@
               {% endfor %}
             </ul>
           </details>
+          {% endif %}
 
-          <details class="subtask-filter">
-            <summary>En procés ({{ task.in_progress_subtasks|length }})</summary>
+          {% if task.in_progress_subtasks %}
+          <details class="subtask-group is-progress">
+            <summary><span class="status-icon">◐</span>En procés<span class="subtask-count">{{ task.in_progress_subtasks|length }}</span></summary>
             <ul class="subtasks">
               {% for sub in task.in_progress_subtasks %}
                 <li class="subtask {% if sub.done %}done{% endif %}{% if sub.in_progress %} in-progress{% endif %}{% if sub.is_overdue %} overdue{% endif %}">
@@ -123,9 +127,11 @@
               {% endfor %}
             </ul>
           </details>
+          {% endif %}
 
-          <details class="subtask-filter">
-            <summary>Completades ({{ task.done_subtasks|length }})</summary>
+          {% if task.done_subtasks %}
+          <details class="subtask-group is-done">
+            <summary><span class="status-icon">✓</span>Completades<span class="subtask-count">{{ task.done_subtasks|length }}</span></summary>
             <ul class="subtasks">
               {% for sub in task.done_subtasks %}
                 <li class="subtask {% if sub.done %}done{% endif %}{% if sub.in_progress %} in-progress{% endif %}{% if sub.is_overdue %} overdue{% endif %}">
@@ -154,6 +160,8 @@
               {% endfor %}
             </ul>
           </details>
+          {% endif %}
+        </div>
         {% endif %}
       </li>
     {% endfor %}

@@ -493,6 +493,96 @@ h1 {
   font-size: 0.78rem;
 }
 
+/* Acordions de subtasques per estat, dins la targeta de la tasca pare.
+   Cada grup és una mini-targeta amb capçalera clicable (summary) i
+   llista de subtasques; els grups buits no es renderitzen. */
+.subtask-groups {
+  width: 100%;
+  margin: 0.5rem 0 0 0.1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.subtask-group {
+  background: var(--card-dim);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+
+.subtask-group summary {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.45rem 0.7rem;
+  cursor: pointer;
+  list-style: none;
+  user-select: none;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--muted);
+}
+
+.subtask-group summary::-webkit-details-marker {
+  display: none;
+}
+
+.subtask-group summary:hover,
+.subtask-group[open] summary {
+  color: var(--text);
+}
+
+/* Chevron que rota en obrir el grup */
+.subtask-group summary::after {
+  content: "›";
+  font-size: 1rem;
+  line-height: 1;
+  color: var(--muted);
+  transition: transform 0.15s ease;
+}
+
+.subtask-group[open] summary::after {
+  transform: rotate(90deg);
+}
+
+/* Icona d'estat davant el títol del grup: els mateixos glifs
+   (∘ ◐ ✓) que fan servir els botons de marcar de l'app. */
+.subtask-group .status-icon {
+  font-size: 0.9rem;
+}
+
+.subtask-group.is-pending .status-icon {
+  color: var(--muted);
+}
+
+.subtask-group.is-progress .status-icon {
+  color: var(--warning-light);
+}
+
+.subtask-group.is-done .status-icon {
+  color: var(--primary);
+}
+
+/* Recompte del grup, en píndola, alçat a la dreta */
+.subtask-count {
+  margin-left: auto;
+  font-size: 0.75rem;
+  font-weight: 400;
+  line-height: 1.4;
+  color: var(--muted);
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 0 0.5rem;
+}
+
+/* Llista de subtasques dins el grup: separador fi sota la capçalera */
+.subtask-group .subtasks {
+  margin: 0;
+  padding: 0.3rem 0.55rem 0.55rem;
+  border-top: 1px solid var(--border);
+}
+
 /* Formularis */
 form p {
   margin: 0 0 0.9rem;
