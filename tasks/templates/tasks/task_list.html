@@ -63,9 +63,9 @@
         <!-- Desplegables independents de subtasques per estat -->
         {% if task.subtasks.all %}
           <details class="subtask-filter">
-            <summary>Pendents ({{ task.subtasks.filter(status=Task.Status.PENDING).count }})</summary>
+            <summary>Pendents ({{ task.pending_subtasks|length }})</summary>
             <ul class="subtasks">
-              {% for sub in task.subtasks.filter(status=Task.Status.PENDING) %}
+              {% for sub in task.pending_subtasks %}
                 <li class="subtask {% if sub.done %}done{% endif %}{% if sub.in_progress %} in-progress{% endif %}{% if sub.is_overdue %} overdue{% endif %}">
                   <form method="post" action="{% url 'tasks:toggle' sub.pk %}?{{ request.GET.urlencode }}" class="inline-form">
                     {% csrf_token %}
@@ -94,9 +94,9 @@
           </details>
 
           <details class="subtask-filter">
-            <summary>En procés ({{ task.subtasks.filter(status=Task.Status.IN_PROGRESS).count }})</summary>
+            <summary>En procés ({{ task.in_progress_subtasks|length }})</summary>
             <ul class="subtasks">
-              {% for sub in task.subtasks.filter(status=Task.Status.IN_PROGRESS) %}
+              {% for sub in task.in_progress_subtasks %}
                 <li class="subtask {% if sub.done %}done{% endif %}{% if sub.in_progress %} in-progress{% endif %}{% if sub.is_overdue %} overdue{% endif %}">
                   <form method="post" action="{% url 'tasks:toggle' sub.pk %}?{{ request.GET.urlencode }}" class="inline-form">
                     {% csrf_token %}
@@ -125,9 +125,9 @@
           </details>
 
           <details class="subtask-filter">
-            <summary>Completades ({{ task.subtasks.filter(status=Task.Status.DONE).count }})</summary>
+            <summary>Completades ({{ task.done_subtasks|length }})</summary>
             <ul class="subtasks">
-              {% for sub in task.subtasks.filter(status=Task.Status.DONE) %}
+              {% for sub in task.done_subtasks %}
                 <li class="subtask {% if sub.done %}done{% endif %}{% if sub.in_progress %} in-progress{% endif %}{% if sub.is_overdue %} overdue{% endif %}">
                   <form method="post" action="{% url 'tasks:toggle' sub.pk %}?{{ request.GET.urlencode }}" class="inline-form">
                     {% csrf_token %}

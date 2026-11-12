@@ -149,3 +149,22 @@ class Task(models.Model):
         subs = list(self.subtasks.all())
         done = sum(1 for s in subs if s.status == self.Status.DONE)
         return done, len(subs)
+
+    def _subtasks_by_status(self, status: str) -> "list[Task]":
+        """Les subtasques pròpies amb un estat concret, per ordre del Meta.
+
+        Fa servir la caché del prefetch_related quan hi ha; no toca la BD.
+        """
+        return [s for s in self.subtasks.all() if s.status == status]
+
+    @property
+    def pending_subtasks(self) -> "list[Task]":
+        return self._subtasks_by_status(self.Status.PENDING)
+
+    @property
+    def in_progress_subtasks(self) -> "list[Task]":
+        return self._subtasks_by_status(self.Status.IN_PROGRESS)
+
+    @property
+    def done_subtasks(self) -> "list[Task]":
+        return self._subtasks_by_status(self.Status.DONE)
